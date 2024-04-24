@@ -1,0 +1,11 @@
+# commit to be tagged for the new release
+commit = "HEAD"
+
+project_name = "sbc-turingrk1"
+github_repo = "nberlee/sbc-turingrk1"
+match_deps = "^github.com/(nberlee/[a-zA-Z0-9-]+)$"
+
+# previous = -
+# pre_release = true
+
+# [notes]

@@ -1,0 +1,465 @@
+From b1cf12a323d1537b0a78b0b659709cada683746b Mon Sep 17 00:00:00 2001
+From: XiaoDong Huang <derrick.huang@rock-chips.com>
+Date: Sun, 25 Jun 2023 17:38:13 +0800
+Subject: [PATCH] feat(rockchip): support SCMI for clock/reset domain
+
+Signed-off-by: XiaoDong Huang <derrick.huang@rock-chips.com>
+Change-Id: I5b983877a5b4e8acababbf7e0a3e2725e6479e08
+---
+
+diff --git a/plat/rockchip/common/include/rockchip_sip_svc.h b/plat/rockchip/common/include/rockchip_sip_svc.h
+index 340d653..8836f9b 100644
+--- a/plat/rockchip/common/include/rockchip_sip_svc.h
++++ b/plat/rockchip/common/include/rockchip_sip_svc.h
+@@ -11,6 +11,7 @@
+ #define SIP_SVC_CALL_COUNT		0x8200ff00
+ #define SIP_SVC_UID			0x8200ff01
+ #define SIP_SVC_VERSION			0x8200ff03
++#define RK_SIP_SCMI_AGENT0		0x82000010
+ 
+ /* rockchip SiP Service Calls version numbers */
+ #define RK_SIP_SVC_VERSION_MAJOR	0x0
+diff --git a/plat/rockchip/common/scmi/scmi.c b/plat/rockchip/common/scmi/scmi.c
+new file mode 100644
+index 0000000..84696fa
+--- /dev/null
++++ b/plat/rockchip/common/scmi/scmi.c
+@@ -0,0 +1,88 @@
++/*
++ * Copyright (c) 2024, Rockchip, Inc. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <assert.h>
++#include <string.h>
++
++#include <drivers/scmi-msg.h>
++#include <drivers/scmi.h>
++#include <lib/utils.h>
++#include <lib/utils_def.h>
++
++#include <plat_scmi_def.h>
++
++#define MAX_PROTOCOL_IN_LIST		8U
++
++static const char vendor[] = "rockchip";
++static const char sub_vendor[] = "";
++
++#pragma weak rockchip_scmi_protocol_table
++
++const uint8_t rockchip_scmi_protocol_table[1][MAX_PROTOCOL_IN_LIST] = {
++	{ SCMI_PROTOCOL_ID_CLOCK,
++	  SCMI_PROTOCOL_ID_RESET_DOMAIN,
++	  0
++	}
++};
++
++const char *plat_scmi_vendor_name(void)
++{
++	return vendor;
++}
++
++const char *plat_scmi_sub_vendor_name(void)
++{
++	return sub_vendor;
++}
++
++size_t plat_scmi_protocol_count(void)
++{
++	unsigned int count = 0U;
++	const uint8_t *protocol_list = rockchip_scmi_protocol_table[0];
++
++	while (protocol_list[count])
++		count++;
++
++	return count;
++}
++
++const uint8_t *plat_scmi_protocol_list(unsigned int agent_id)
++{
++	assert(agent_id < ARRAY_SIZE(rockchip_scmi_protocol_table));
++
++	return rockchip_scmi_protocol_table[agent_id];
++}
++
++static struct scmi_msg_channel scmi_channel[] = {
++	[0] = {
++		.shm_addr = SMT_BUFFER0_BASE,
++		.shm_size = SMT_BUF_SLOT_SIZE,
++	},
++
++#ifdef SMT_BUFFER1_BASE
++	[1] = {
++		.shm_addr = SMT_BUFFER1_BASE,
++		.shm_size = SMT_BUF_SLOT_SIZE,
++	},
++#endif
++};
++
++struct scmi_msg_channel *plat_scmi_get_channel(unsigned int agent_id)
++{
++	assert(agent_id < ARRAY_SIZE(scmi_channel));
++
++	return &scmi_channel[agent_id];
++}
++
++#pragma weak rockchip_init_scmi_server
++
++void rockchip_init_scmi_server(void)
++{
++	size_t i;
++
++	for (i = 0U; i < ARRAY_SIZE(scmi_channel); i++)
++		scmi_smt_init_agent_channel(&scmi_channel[i]);
++}
+diff --git a/plat/rockchip/common/scmi/scmi_clock.c b/plat/rockchip/common/scmi/scmi_clock.c
+new file mode 100644
+index 0000000..4921d49
+--- /dev/null
++++ b/plat/rockchip/common/scmi/scmi_clock.c
+@@ -0,0 +1,157 @@
++/*
++ * Copyright (c) 2024, Rockchip, Inc. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <drivers/scmi-msg.h>
++#include <drivers/scmi.h>
++
++#include "scmi_clock.h"
++
++#pragma weak rockchip_scmi_clock_count
++#pragma weak rockchip_scmi_get_clock
++
++size_t rockchip_scmi_clock_count(unsigned int agent_id __unused)
++{
++	return 0;
++}
++
++rk_scmi_clock_t *rockchip_scmi_get_clock(uint32_t agent_id __unused,
++					 uint32_t scmi_id __unused)
++{
++	return NULL;
++}
++
++size_t plat_scmi_clock_count(unsigned int agent_id)
++{
++	return rockchip_scmi_clock_count(agent_id);
++}
++
++const char *plat_scmi_clock_get_name(unsigned int agent_id,
++				     unsigned int scmi_id)
++{
++	rk_scmi_clock_t *clock;
++
++	clock = rockchip_scmi_get_clock(agent_id, scmi_id);
++	if (clock == 0)
++		return NULL;
++
++	return clock->name;
++}
++
++int32_t plat_scmi_clock_rates_array(unsigned int agent_id,
++				    unsigned int scmi_id,
++				    unsigned long *rates,
++				    size_t *nb_elts,
++				    uint32_t start_idx)
++{
++	uint32_t i;
++	unsigned long *rate_table;
++	rk_scmi_clock_t *clock;
++
++	clock = rockchip_scmi_get_clock(agent_id, scmi_id);
++	if (clock == 0)
++		return SCMI_NOT_FOUND;
++
++	rate_table = clock->rate_table;
++	if (rate_table == 0)
++		return SCMI_NOT_SUPPORTED;
++
++	if (rates == 0) {
++		*nb_elts = clock->rate_cnt;
++		goto out;
++	}
++
++	if (start_idx + *nb_elts > clock->rate_cnt)
++		return SCMI_OUT_OF_RANGE;
++
++	for (i = 0; i < *nb_elts; i++)
++		rates[i] = rate_table[start_idx + i];
++
++out:
++	return SCMI_SUCCESS;
++}
++
++int32_t plat_scmi_clock_rates_by_step(unsigned int agent_id __unused,
++				      unsigned int scmi_id __unused,
++				      unsigned long *steps __unused)
++{
++	return SCMI_NOT_SUPPORTED;
++}
++
++unsigned long plat_scmi_clock_get_rate(unsigned int agent_id,
++				       unsigned int scmi_id)
++{
++	rk_scmi_clock_t *clock;
++	unsigned long rate = 0;
++
++	clock = rockchip_scmi_get_clock(agent_id, scmi_id);
++	if (clock == 0)
++		return 0;
++
++	if (clock->clk_ops && clock->clk_ops->get_rate)
++		rate = clock->clk_ops->get_rate(clock);
++
++	/* return cur_rate if no get_rate ops or get_rate return 0 */
++	if (rate == 0)
++		rate = clock->cur_rate;
++
++	return rate;
++}
++
++int32_t plat_scmi_clock_set_rate(unsigned int agent_id,
++				 unsigned int scmi_id,
++				 unsigned long rate)
++{
++	rk_scmi_clock_t *clock;
++	int32_t status = 0;
++
++	clock = rockchip_scmi_get_clock(agent_id, scmi_id);
++	if (clock == 0)
++		return SCMI_NOT_FOUND;
++
++	if (clock->clk_ops && clock->clk_ops->set_rate) {
++		status = clock->clk_ops->set_rate(clock, rate);
++		if (status == SCMI_SUCCESS)
++			clock->cur_rate = rate;
++	} else {
++		status = SCMI_NOT_SUPPORTED;
++	}
++
++	return status;
++}
++
++int32_t plat_scmi_clock_get_state(unsigned int agent_id,
++				  unsigned int scmi_id)
++{
++	rk_scmi_clock_t *clock;
++
++	clock = rockchip_scmi_get_clock(agent_id, scmi_id);
++	if (clock == 0)
++		return 0;
++
++	return clock->enable;
++}
++
++int32_t plat_scmi_clock_set_state(unsigned int agent_id,
++				  unsigned int scmi_id,
++				  bool enable_not_disable)
++{
++	rk_scmi_clock_t *clock;
++	int32_t status = 0;
++
++	clock = rockchip_scmi_get_clock(agent_id, scmi_id);
++	if (clock == 0)
++		return SCMI_NOT_FOUND;
++
++	if (clock->clk_ops && clock->clk_ops->set_status) {
++		status = clock->clk_ops->set_status(clock, enable_not_disable);
++		if (status == SCMI_SUCCESS)
++			clock->enable = enable_not_disable;
++	} else {
++		status = SCMI_NOT_SUPPORTED;
++	}
++
++	return status;
++}
+diff --git a/plat/rockchip/common/scmi/scmi_clock.h b/plat/rockchip/common/scmi/scmi_clock.h
+new file mode 100644
+index 0000000..e640fe1
+--- /dev/null
++++ b/plat/rockchip/common/scmi/scmi_clock.h
+@@ -0,0 +1,50 @@
++/*
++ * Copyright (c) 2024, Rockchip, Inc. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef RK_SCMI_CLOCK_H
++#define RK_SCMI_CLOCK_H
++
++#include <stdint.h>
++
++#include <common.h>
++
++struct rk_scmi_clock;
++
++struct rk_clk_ops {
++	unsigned long (*get_rate)(struct rk_scmi_clock *clock);
++	int (*set_rate)(struct rk_scmi_clock *clock, unsigned long rate);
++	int (*set_status)(struct rk_scmi_clock *clock, bool status);
++};
++
++typedef struct rk_scmi_clock {
++	char name[SCMI_CLOCK_NAME_LENGTH_MAX];
++	uint8_t enable;
++	int8_t is_security;
++	uint32_t id;
++	uint32_t rate_cnt;
++	uint64_t cur_rate;
++	uint32_t enable_count;
++	const struct rk_clk_ops *clk_ops;
++	unsigned long *rate_table;
++} rk_scmi_clock_t;
++
++/*
++ * Return number of clock controllers for an agent
++ * @agent_id: SCMI agent ID
++ * Return number of clock controllers
++ */
++size_t rockchip_scmi_clock_count(unsigned int agent_id);
++
++/*
++ * Get rk_scmi_clock_t point
++ * @agent_id: SCMI agent ID
++ * @scmi_id: SCMI clock ID
++ * Return a rk_scmi_clock_t point
++ */
++rk_scmi_clock_t *rockchip_scmi_get_clock(uint32_t agent_id,
++					 uint32_t scmi_id);
++
++#endif /* RK_SCMI_CLOCK_H */
+diff --git a/plat/rockchip/common/scmi/scmi_rstd.c b/plat/rockchip/common/scmi/scmi_rstd.c
+new file mode 100644
+index 0000000..404d85e
+--- /dev/null
++++ b/plat/rockchip/common/scmi/scmi_rstd.c
+@@ -0,0 +1,74 @@
++/*
++ * Copyright (c) 2024, Rockchip, Inc. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#include <drivers/scmi-msg.h>
++#include <drivers/scmi.h>
++
++#include "scmi_rstd.h"
++
++#pragma weak rockchip_scmi_rstd_count
++#pragma weak rockchip_scmi_get_rstd
++
++size_t rockchip_scmi_rstd_count(unsigned int agent_id __unused)
++{
++	return 0U;
++}
++
++rk_scmi_rstd_t *rockchip_scmi_get_rstd(unsigned int agent_id __unused,
++				       unsigned int scmi_id __unused)
++{
++	return NULL;
++}
++
++size_t plat_scmi_rstd_count(unsigned int agent_id)
++{
++	return rockchip_scmi_rstd_count(agent_id);
++}
++
++const char *plat_scmi_rstd_get_name(unsigned int agent_id,
++				    unsigned int scmi_id)
++{
++	rk_scmi_rstd_t *rstd;
++
++	rstd = rockchip_scmi_get_rstd(agent_id, scmi_id);
++	if (rstd == 0)
++		return NULL;
++
++	return rstd->name;
++}
++
++int32_t plat_scmi_rstd_autonomous(unsigned int agent_id,
++				  unsigned int scmi_id,
++				  unsigned int state)
++{
++	rk_scmi_rstd_t *rstd;
++
++	rstd = rockchip_scmi_get_rstd(agent_id, scmi_id);
++	if (rstd == 0)
++		return SCMI_NOT_FOUND;
++
++	if ((rstd->rstd_ops && rstd->rstd_ops->reset_auto) != 0)
++		return rstd->rstd_ops->reset_auto(rstd, state);
++	else
++		return SCMI_NOT_SUPPORTED;
++}
++
++int32_t plat_scmi_rstd_set_state(unsigned int agent_id,
++				 unsigned int scmi_id,
++				 bool assert_not_deassert)
++{
++	rk_scmi_rstd_t *rstd;
++
++	rstd = rockchip_scmi_get_rstd(agent_id, scmi_id);
++	if (rstd == 0)
++		return SCMI_NOT_FOUND;
++
++	if ((rstd->rstd_ops && rstd->rstd_ops->reset_explicit) != 0)
++		return rstd->rstd_ops->reset_explicit(rstd,
++						      assert_not_deassert);
++	else
++		return SCMI_NOT_SUPPORTED;
++}
+diff --git a/plat/rockchip/common/scmi/scmi_rstd.h b/plat/rockchip/common/scmi/scmi_rstd.h
+new file mode 100644
+index 0000000..1af5881
+--- /dev/null
++++ b/plat/rockchip/common/scmi/scmi_rstd.h
+@@ -0,0 +1,45 @@
++/*
++ * Copyright (c) 2024, Rockchip, Inc. All rights reserved.
++ *
++ * SPDX-License-Identifier: BSD-3-Clause
++ */
++
++#ifndef RK_SCMI_RESET_DOMAIN_H
++#define RK_SCMI_RESET_DOMAIN_H
++
++#include <stdint.h>
++
++#include <common.h>
++
++struct rk_scmi_rstd;
++
++struct rk_scmi_rstd_ops {
++	int (*reset_auto)(struct rk_scmi_rstd *rstd, uint32_t state);
++	int (*reset_explicit)(struct rk_scmi_rstd *rstd, bool assert_not_deassert);
++};
++
++typedef struct rk_scmi_rstd {
++	char name[SCMI_RESET_DOMAIN_ATTR_NAME_SZ];
++	uint32_t id;
++	uint32_t attribute;
++	uint32_t latency;
++	struct rk_scmi_rstd_ops *rstd_ops;
++} rk_scmi_rstd_t;
++
++/*
++ * Return number of reset domain for an agent
++ * @agent_id: SCMI agent ID
++ * Return number of reset domain
++ */
++size_t rockchip_scmi_rstd_count(unsigned int agent_id);
++
++/*
++ * Get rk_scmi_rstd_t point
++ * @agent_id: SCMI agent ID
++ * @scmi_id: SCMI rstd ID
++ * Return a rk_scmi_rstd_t point
++ */
++rk_scmi_rstd_t *rockchip_scmi_get_rstd(unsigned int agent_id,
++				       unsigned int scmi_id);
++
++#endif /* RK_SCMI_RESET_DOMAIN_H */

@@ -1,0 +1,50 @@
+name: kernel-build
+variant: scratch
+shell: /toolchain/bin/bash
+dependencies:
+  - stage: kernel-prepare
+steps:
+  - env:
+      ARCH: arm64
+    prepare:
+      - |
+        cd /src
+        cp -v /pkg/config-arm64 .config
+        cp -v /pkg/certs/* certs/
+      - |
+        cd /src
+        for patch in $(find /pkg/patches -type f -name "*.patch" | sort); do
+          patch -p1 < $patch || (echo "Failed to apply patch $patch" && exit 1)
+        done
+    build:
+      {{ if .BUILD_ARG_KERNEL_TARGET }}
+      - |
+        cd /src
+
+        make {{ .BUILD_ARG_KERNEL_TARGET }}
+      {{ else }}
+      - |
+        cd /src
+
+        make -j $(nproc)
+        make -j $(nproc) modules
+
+        echo "Compiling device-tree blobs"
+        make -j $(nproc) dtbs
+      {{ end }}
+finalize:
+  {{ if .BUILD_ARG_KERNEL_TARGET }}
+  - from: /src/.config
+    to: config-arm64
+  {{ else }}
+  - from: /src
+    to: /src
+  - from: /toolchain
+    to: /toolchain
+  - from: /usr
+    to: /usr
+  - from: /bin
+    to: /bin
+  - from: /lib
+    to: /lib
+  {{ end }}

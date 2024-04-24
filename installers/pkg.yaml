@@ -1,7 +1,9 @@
-name: sbc-board
+name: sbc-turingrk1
 variant: scratch
 dependencies:
-  - stage: board
+  - stage: turingrk1
+  - stage: kernel
+    platform: linux/arm64
   - stage: u-boot
     platform: linux/arm64
   - stage: profiles

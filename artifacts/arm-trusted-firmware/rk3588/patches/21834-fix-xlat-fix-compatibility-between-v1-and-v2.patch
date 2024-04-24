@@ -1,0 +1,51 @@
+From 2c9b1857938c7d5b4599aa9d7ef05a99b6bd615a Mon Sep 17 00:00:00 2001
+From: XiaoDong Huang <derrick.huang@rock-chips.com>
+Date: Sun, 25 Jun 2023 15:55:42 +0800
+Subject: [PATCH] fix(rockchip): xlat: fix compatibility between v1 and v2
+
+Signed-off-by: XiaoDong Huang <derrick.huang@rock-chips.com>
+Change-Id: I1194ef232947ba90fa374466773373762a5acdb5
+---
+
+diff --git a/plat/rockchip/common/aarch32/platform_common.c b/plat/rockchip/common/aarch32/platform_common.c
+index 9030951..25ee964 100644
+--- a/plat/rockchip/common/aarch32/platform_common.c
++++ b/plat/rockchip/common/aarch32/platform_common.c
+@@ -12,7 +12,7 @@
+ #include <common/bl_common.h>
+ #include <common/debug.h>
+ #include <lib/utils.h>
+-#include <lib/xlat_tables/xlat_tables.h>
++#include <lib/xlat_tables/xlat_tables_compat.h>
+ 
+ #include <plat_private.h>
+ 
+diff --git a/plat/rockchip/common/aarch64/platform_common.c b/plat/rockchip/common/aarch64/platform_common.c
+index 81e8520..060abe4 100644
+--- a/plat/rockchip/common/aarch64/platform_common.c
++++ b/plat/rockchip/common/aarch64/platform_common.c
+@@ -13,7 +13,7 @@
+ #include <common/debug.h>
+ #include <drivers/arm/cci.h>
+ #include <lib/utils.h>
+-#include <lib/xlat_tables/xlat_tables.h>
++#include <lib/xlat_tables/xlat_tables_compat.h>
+ 
+ #include <plat_private.h>
+ 
+diff --git a/plat/rockchip/common/include/plat_private.h b/plat/rockchip/common/include/plat_private.h
+index 990d106..f5e4663 100644
+--- a/plat/rockchip/common/include/plat_private.h
++++ b/plat/rockchip/common/include/plat_private.h
+@@ -11,9 +11,9 @@
+ 
+ #include <stdint.h>
+ 
+-#include <lib/psci/psci.h>
+-#include <lib/xlat_tables/xlat_tables.h>
+ #include <lib/mmio.h>
++#include <lib/psci/psci.h>
++#include <lib/xlat_tables/xlat_tables_compat.h>
+ #include <plat_params.h>
+ 
+ #define __sramdata __attribute__((section(".sram.data")))

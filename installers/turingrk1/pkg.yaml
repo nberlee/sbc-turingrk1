@@ -1,4 +1,4 @@
-name: board
+name: turingrk1
 variant: scratch
 shell: /toolchain/bin/bash
 dependencies:
@@ -14,12 +14,12 @@ steps:
         export PATH=${PATH}:${TOOLCHAIN}/go/bin
 
         cd /pkg/src
-        CGO_ENABLED=0 go build -o ./board .
+        CGO_ENABLED=0 go build -o ./turingrk1 .
     install:
       - |
         mkdir -p /rootfs/installers/
 
-        cp -p /pkg/src/board /rootfs/installers/board
+        cp -p /pkg/src/turingrk1 /rootfs/installers/turingrk1
 finalize:
   - from: /rootfs
     to: /rootfs

@@ -1,0 +1,621 @@
+From patchwork Thu Feb 29 19:26:35 2024
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Patchwork-Submitter: Alexey Charkov <alchark@gmail.com>
+X-Patchwork-Id: 13577572
+Return-Path: 
+ <linux-rockchip-bounces+linux-rockchip=archiver.kernel.org@lists.infradead.org>
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
+	aws-us-west-2-korg-lkml-1.web.codeaurora.org
+Received: from bombadil.infradead.org (bombadil.infradead.org
+ [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.lore.kernel.org (Postfix) with ESMTPS id 0EF7DC48BF6
+	for <linux-rockchip@archiver.kernel.org>;
+ Thu, 29 Feb 2024 19:27:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=lists.infradead.org; s=bombadil.20210309; h=Sender:
+	Content-Transfer-Encoding:Content-Type:List-Subscribe:List-Help:List-Post:
+	List-Archive:List-Unsubscribe:List-Id:Cc:To:In-Reply-To:References:Message-Id
+	:MIME-Version:Subject:Date:From:Reply-To:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	List-Owner; bh=5YOeyNBkEdayOByitMF/vgyFuamDO/EyERNPBNz4YRk=; b=I1NNRNt20pNKIN
+	t54bS0eXtuxaZLm5I7AG8rtozNriBf6708OckSjJeISAAoXNLnDy0Xylmob3wQ2h76F5hJmMkWLYw
+	G1sKxkDfRKSh9ZTd4DeAhVj1e5rDOTY5Xk35B8eBPW82UaX2ZJNzmd+g3IYhi+ooD2z28VEinJ1IS
+	U1N12fimc9tqKAFzQFd6tPqAKP4Vu3ALagD08exL+rtrcNahfgH9+wMWzo8W5I8g5f9WgPPaGcMr1
+	V41MFungPza2iv0AY2Y+Q4CYNpsfuLb7DOnkzsa3sqBZzWdetIhGgGAopIMFlk+XlUpqBDBT7iK7k
+	yAtHufXWVc/vpGS0T1yA==;
+Received: from localhost ([::1] helo=bombadil.infradead.org)
+	by bombadil.infradead.org with esmtp (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rfm4N-0000000Esbd-31Rp;
+	Thu, 29 Feb 2024 19:27:51 +0000
+Received: from mail-wm1-x32d.google.com ([2a00:1450:4864:20::32d])
+	by bombadil.infradead.org with esmtps (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rfm3l-0000000EsCg-2VkG;
+	Thu, 29 Feb 2024 19:27:16 +0000
+Received: by mail-wm1-x32d.google.com with SMTP id
+ 5b1f17b1804b1-412bb23e5c5so7332295e9.1;
+        Thu, 29 Feb 2024 11:27:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1709234832; x=1709839632;
+ darn=lists.infradead.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ZwVUPftNegb6HH4bYsAEUZGVb0uMfPEnr6vp5tlxDKo=;
+        b=Ap/0uL1TweAVy8g5m9FzGBDaovXpxl9vyeeLknbH2+5bXFxuF8sVklaaaxmnfZFKtb
+         iCzj1s/jEJY5drUrAqWsK/HVbLG+/ibvHnU9qdoFvaWR1/8SGaoZomdZAY7VcFMXjvDu
+         ovGYMz0sFiG8Ai2AVwClGsD242YQXNBHcie2CtEMoHgyBjrrM0vYhtMWnYQGAavoRs0O
+         27jbJuVSXejwIcvUavnbNxjUxYgaBgzawQqjGlNQlmzZ4DcuNxWr314Zf4mnpk69nZqh
+         2ZMAgCxsqS6UPfsQTxJSAeBaD0+zqLsAeIxuMKE/js4BoJqiQoA5G19yiKqBLzm9zsbG
+         jJvQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709234832; x=1709839632;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ZwVUPftNegb6HH4bYsAEUZGVb0uMfPEnr6vp5tlxDKo=;
+        b=XFJ4WmanMrHeF4V5HPKDnuKMWbqjH/JOKA92YUX+GWJJMQj2gVGq4MPSRB7mhSCOSo
+         c0LREmok5R28EJCGMASJx9g/XIqshfge46mlAWYuR6x0HMrwNVCuOjYl0T+JRKAE20kf
+         P+a1ZofH31xWMkJSaSqIAeAb88agCDsuR05bKPYcIa3PxWlOCh7vEjA7CLgPxK/RrwTS
+         Caqtk6Kh2VOpR7JhgSw6cgmVB47SYT0voqJHCUoTDzi0SmUYsiXotBvR1gQTXBNZtr1Q
+         3BERk3EWa7PMnvBN2+QzSt2dCfhursW8CdAladW4RSxz5m13RarKy4HUKFwOQED/u8au
+         xqGg==
+X-Forwarded-Encrypted: i=1;
+ AJvYcCXBX+yTq8DSwWyVvABwV0TCvXxrnNg/ZXx7cGVmu7XDq00y5Z6x3ssRRQq3Vf0NrfjT1ZL13tcT6Cn8A+3smRE5dscnxgdqFPA6xWjxRkcML6MmC9VUVqin8DyBbOcEgckUsWCPhlYnfHG5XSM58nAZePyuyQD+rIE=
+X-Gm-Message-State: AOJu0Yw2//kQfGmFZzc2QKAFU7+1aT6oQll/CxoKP6nsNuy6z5UWbzJH
+	mZnUOLftNGckhfQi+iho5mN3no4gsqnOWF0p/0+G1YTFp2U3WFYZ
+X-Google-Smtp-Source: 
+ AGHT+IGgvwjsJCNA59wEBsCYDT3n5G2vTxs3waTze6xViTgTY3HRaJ0AjinQi9sy8qMMKuZNdbvcig==
+X-Received: by 2002:a05:600c:4749:b0:412:c379:606 with SMTP id
+ w9-20020a05600c474900b00412c3790606mr831572wmo.2.1709234832258;
+        Thu, 29 Feb 2024 11:27:12 -0800 (PST)
+Received: from [172.30.32.188] ([2001:8f8:183b:6ebc::d35])
+        by smtp.gmail.com with ESMTPSA id
+ j20-20020a05600c1c1400b00412bca49a5bsm2853944wms.42.2024.02.29.11.27.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Feb 2024 11:27:12 -0800 (PST)
+From: Alexey Charkov <alchark@gmail.com>
+Date: Thu, 29 Feb 2024 23:26:35 +0400
+Subject: [PATCH v3 4/5] arm64: dts: rockchip: Add OPP data for CPU cores on
+ RK3588
+MIME-Version: 1.0
+Message-Id: <20240229-rk-dts-additions-v3-4-6afe8473a631@gmail.com>
+References: <20240229-rk-dts-additions-v3-0-6afe8473a631@gmail.com>
+In-Reply-To: <20240229-rk-dts-additions-v3-0-6afe8473a631@gmail.com>
+To: Rob Herring <robh+dt@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+ Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>
+Cc: Daniel Lezcano <daniel.lezcano@linaro.org>,
+ Dragan Simic <dsimic@manjaro.org>, Viresh Kumar <viresh.kumar@linaro.org>,
+ Chen-Yu Tsai <wens@kernel.org>, devicetree@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
+ linux-kernel@vger.kernel.org, Alexey Charkov <alchark@gmail.com>
+X-Mailer: b4 0.12.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1709234816; l=7377;
+ i=alchark@gmail.com; s=20240125; h=from:subject:message-id;
+ bh=HqctyYsaxYWsfVb7+E0CHFs01nBeI4mecklDekwBdvM=;
+ b=IYPGKtGqei9coIZquJt1iE33PtngNeOPlB/ef9HB4xIjCSziIGRB8ptL33UMkddciAK3l4pds
+ VG9L7idHWQAAxjgIXiVfMwhIq6g+NNrafoCbW8NrtVp4uhzEa4VB9M3
+X-Developer-Key: i=alchark@gmail.com; a=ed25519;
+ pk=xRO8VeD3J5jhwe0za0aHt2LDumQr8cm0Ls7Jz3YGimk=
+X-CRM114-Version: 20100106-BlameMichelson ( TRE 0.8.0 (BSD) ) MR-646709E3 
+X-CRM114-CacheID: sfid-20240229_112713_838046_3064BB8D 
+X-CRM114-Status: GOOD (  15.28  )
+X-BeenThere: linux-rockchip@lists.infradead.org
+X-Mailman-Version: 2.1.34
+Precedence: list
+List-Id: Upstream kernel work for Rockchip platforms
+ <linux-rockchip.lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-rockchip>,
+ <mailto:linux-rockchip-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-rockchip/>
+List-Post: <mailto:linux-rockchip@lists.infradead.org>
+List-Help: <mailto:linux-rockchip-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-rockchip>,
+ <mailto:linux-rockchip-request@lists.infradead.org?subject=subscribe>
+Sender: "Linux-rockchip" <linux-rockchip-bounces@lists.infradead.org>
+Errors-To: 
+ linux-rockchip-bounces+linux-rockchip=archiver.kernel.org@lists.infradead.org
+
+By default the CPUs on RK3588 start up in a conservative performance
+mode. Add frequency and voltage mappings to the device tree to enable
+dynamic scaling via cpufreq.
+
+OPP values are adapted from Radxa's downstream kernel for Rock 5B [1],
+stripping them down to the minimum frequency and voltage combinations
+as expected by the generic upstream cpufreq-dt driver, and also dropping
+those OPPs that don't differ in voltage but only in frequency (keeping
+the top frequency OPP in each case).
+
+Note that this patch ignores voltage scaling for the CPU memory
+interface which the downstream kernel does through a custom cpufreq
+driver, and which is why the downstream version has two sets of voltage
+values for each OPP (the second one being meant for the memory
+interface supply regulator). This is done instead via regulator
+coupling between CPU and memory interface supplies on affected boards.
+
+This has been tested on Rock 5B with u-boot 2023.11 compiled from
+Collabora's integration tree [2] with binary bl31 and appears to be
+stable both under active cooling and passive cooling (with throttling)
+
+[1] https://github.com/radxa/kernel/blob/stable-5.10-rock5/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+[2] https://gitlab.collabora.com/hardware-enablement/rockchip-3588/u-boot
+
+Signed-off-by: Alexey Charkov <alchark@gmail.com>
+---
+ arch/arm64/boot/dts/rockchip/rk3588s.dtsi | 122 ++++++++++++++++++++++++++++++
+ 1 file changed, 122 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+index 8c9bd694c..cddbe9ea9 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+@@ -65,6 +65,7 @@ cpu_l0: cpu@0 {
+ 			clocks = <&scmi_clk SCMI_CLK_CPUL>;
+ 			assigned-clocks = <&scmi_clk SCMI_CLK_CPUL>;
+ 			assigned-clock-rates = <816000000>;
++			operating-points-v2 = <&cluster0_opp_table>;
+ 			cpu-idle-states = <&CPU_SLEEP>;
+ 			i-cache-size = <32768>;
+ 			i-cache-line-size = <64>;
+@@ -84,6 +85,7 @@ cpu_l1: cpu@100 {
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <530>;
+ 			clocks = <&scmi_clk SCMI_CLK_CPUL>;
++			operating-points-v2 = <&cluster0_opp_table>;
+ 			cpu-idle-states = <&CPU_SLEEP>;
+ 			i-cache-size = <32768>;
+ 			i-cache-line-size = <64>;
+@@ -103,6 +105,7 @@ cpu_l2: cpu@200 {
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <530>;
+ 			clocks = <&scmi_clk SCMI_CLK_CPUL>;
++			operating-points-v2 = <&cluster0_opp_table>;
+ 			cpu-idle-states = <&CPU_SLEEP>;
+ 			i-cache-size = <32768>;
+ 			i-cache-line-size = <64>;
+@@ -122,6 +125,7 @@ cpu_l3: cpu@300 {
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <530>;
+ 			clocks = <&scmi_clk SCMI_CLK_CPUL>;
++			operating-points-v2 = <&cluster0_opp_table>;
+ 			cpu-idle-states = <&CPU_SLEEP>;
+ 			i-cache-size = <32768>;
+ 			i-cache-line-size = <64>;
+@@ -143,6 +147,7 @@ cpu_b0: cpu@400 {
+ 			clocks = <&scmi_clk SCMI_CLK_CPUB01>;
+ 			assigned-clocks = <&scmi_clk SCMI_CLK_CPUB01>;
+ 			assigned-clock-rates = <816000000>;
++			operating-points-v2 = <&cluster1_opp_table>;
+ 			cpu-idle-states = <&CPU_SLEEP>;
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+@@ -162,6 +167,7 @@ cpu_b1: cpu@500 {
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
+ 			clocks = <&scmi_clk SCMI_CLK_CPUB01>;
++			operating-points-v2 = <&cluster1_opp_table>;
+ 			cpu-idle-states = <&CPU_SLEEP>;
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+@@ -183,6 +189,7 @@ cpu_b2: cpu@600 {
+ 			clocks = <&scmi_clk SCMI_CLK_CPUB23>;
+ 			assigned-clocks = <&scmi_clk SCMI_CLK_CPUB23>;
+ 			assigned-clock-rates = <816000000>;
++			operating-points-v2 = <&cluster2_opp_table>;
+ 			cpu-idle-states = <&CPU_SLEEP>;
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+@@ -202,6 +209,7 @@ cpu_b3: cpu@700 {
+ 			enable-method = "psci";
+ 			capacity-dmips-mhz = <1024>;
+ 			clocks = <&scmi_clk SCMI_CLK_CPUB23>;
++			operating-points-v2 = <&cluster2_opp_table>;
+ 			cpu-idle-states = <&CPU_SLEEP>;
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+@@ -316,6 +324,120 @@ l3_cache: l3-cache {
+ 		};
+ 	};
+ 
++	cluster0_opp_table: opp-table-cluster0 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		opp-1008000000 {
++			opp-hz = /bits/ 64 <1008000000>;
++			opp-microvolt = <675000 675000 950000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1200000000 {
++			opp-hz = /bits/ 64 <1200000000>;
++			opp-microvolt = <712500 712500 950000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1416000000 {
++			opp-hz = /bits/ 64 <1416000000>;
++			opp-microvolt = <762500 762500 950000>;
++			clock-latency-ns = <40000>;
++			opp-suspend;
++		};
++		opp-1608000000 {
++			opp-hz = /bits/ 64 <1608000000>;
++			opp-microvolt = <850000 850000 950000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1800000000 {
++			opp-hz = /bits/ 64 <1800000000>;
++			opp-microvolt = <950000 950000 950000>;
++			clock-latency-ns = <40000>;
++		};
++	};
++
++	cluster1_opp_table: opp-table-cluster1 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		opp-1200000000 {
++			opp-hz = /bits/ 64 <1200000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1416000000 {
++			opp-hz = /bits/ 64 <1416000000>;
++			opp-microvolt = <725000 725000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1608000000 {
++			opp-hz = /bits/ 64 <1608000000>;
++			opp-microvolt = <762500 762500 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1800000000 {
++			opp-hz = /bits/ 64 <1800000000>;
++			opp-microvolt = <850000 850000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2016000000 {
++			opp-hz = /bits/ 64 <2016000000>;
++			opp-microvolt = <925000 925000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2208000000 {
++			opp-hz = /bits/ 64 <2208000000>;
++			opp-microvolt = <987500 987500 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2400000000 {
++			opp-hz = /bits/ 64 <2400000000>;
++			opp-microvolt = <1000000 1000000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++	};
++
++	cluster2_opp_table: opp-table-cluster2 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		opp-1200000000 {
++			opp-hz = /bits/ 64 <1200000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1416000000 {
++			opp-hz = /bits/ 64 <1416000000>;
++			opp-microvolt = <725000 725000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1608000000 {
++			opp-hz = /bits/ 64 <1608000000>;
++			opp-microvolt = <762500 762500 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1800000000 {
++			opp-hz = /bits/ 64 <1800000000>;
++			opp-microvolt = <850000 850000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2016000000 {
++			opp-hz = /bits/ 64 <2016000000>;
++			opp-microvolt = <925000 925000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2208000000 {
++			opp-hz = /bits/ 64 <2208000000>;
++			opp-microvolt = <987500 987500 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2400000000 {
++			opp-hz = /bits/ 64 <2400000000>;
++			opp-microvolt = <1000000 1000000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++	};
++
+ 	firmware {
+ 		optee: optee {
+ 			compatible = "linaro,optee-tz";
+
+From patchwork Thu Feb 29 19:26:36 2024
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Patchwork-Submitter: Alexey Charkov <alchark@gmail.com>
+X-Patchwork-Id: 13577573
+Return-Path: 
+ <linux-rockchip-bounces+linux-rockchip=archiver.kernel.org@lists.infradead.org>
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
+	aws-us-west-2-korg-lkml-1.web.codeaurora.org
+Received: from bombadil.infradead.org (bombadil.infradead.org
+ [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.lore.kernel.org (Postfix) with ESMTPS id BE782C48BF6
+	for <linux-rockchip@archiver.kernel.org>;
+ Thu, 29 Feb 2024 19:28:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=lists.infradead.org; s=bombadil.20210309; h=Sender:
+	Content-Transfer-Encoding:Content-Type:List-Subscribe:List-Help:List-Post:
+	List-Archive:List-Unsubscribe:List-Id:Cc:To:In-Reply-To:References:Message-Id
+	:MIME-Version:Subject:Date:From:Reply-To:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	List-Owner; bh=MW+uQq+orUjJ8WwiZ3jY8BhfYtx/ZjTJewTTVMVpwQg=; b=YE+Uj/mZpUiVVx
+	GyZDxVwcnkhBGRnffEVIHok3a80Wau7eRMy5aL+CVeEREqTeDksO1W7m8AUO4N1FGw1nGQlWZGmTO
+	91Gl1ctUC/C767HnDQhmAYeTFg/Ak8Od42IE1lxXXnqNPYl7CTxKb2gFnJqG88rm+4PkdUekrk+0K
+	1WNGMeUG9Y4CIHFj03gROHhY3J8FC+gUZkzwmxORShp3Asodw8/0SHTxgmkmD5wnJOIphQzdro0Um
+	hOA8cQQcxzmKuFMnrOTvljcU55GqPQnc0zq7DhzlBsbeLpcrRAz42c8eFnagtKW8jBruOOCmOrATU
+	ogcYBx4qY6zw8s77S+OA==;
+Received: from localhost ([::1] helo=bombadil.infradead.org)
+	by bombadil.infradead.org with esmtp (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rfm50-0000000Esw0-0PIB;
+	Thu, 29 Feb 2024 19:28:30 +0000
+Received: from mail-lj1-x235.google.com ([2a00:1450:4864:20::235])
+	by bombadil.infradead.org with esmtps (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rfm3q-0000000EsGr-1Ygc;
+	Thu, 29 Feb 2024 19:27:20 +0000
+Received: by mail-lj1-x235.google.com with SMTP id
+ 38308e7fff4ca-2d28387db09so14622591fa.0;
+        Thu, 29 Feb 2024 11:27:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1709234835; x=1709839635;
+ darn=lists.infradead.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=a8pIF69B3+vCEfVyDdwwj/eV/I9z+Zc+q5b1+o/fwOY=;
+        b=XQFDtHVcyHrxCArx6SWJ+gde4uRxDVIwLDwshyPlB5cgWwah8OuUE3vjIM2YguUrqs
+         MQR0k6MtizYs2rc//MiVsWkISIYBFgtrqoTkbVEMJzhH6iItzsEDLq8AYv6FZo8LeLNy
+         7+uB0lN0wS844kJFUhsHtRg7c8eltbKsjDgJdb8OC+cw4sGQBfPvRShvcx7N4ezseEYB
+         f3RgZSa+C1r2YDjozBxWs9x9P0XNAEDfxNBmZlKYIGjgygWwqrC9QqS2Zaervryy0pMM
+         Hzi9xfO0xzYHSTiTZ9cNxrFgePzE3jUhCZ8R6eZ8aC/+bTDPigci5NeuJ8jJO6Uf4IuV
+         KgvQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709234835; x=1709839635;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=a8pIF69B3+vCEfVyDdwwj/eV/I9z+Zc+q5b1+o/fwOY=;
+        b=QtlL79ehePErB5sIBi8G7Trow31zNW+6kkiezjByjkW0izZ68wqnBWM3yXwZYU22OL
+         C5sIRAT/+D1Xp1ihPGXTskNaGrCELL6Hq2tXYNCrivDkmFX2RibdppMa/uw1+fM9yvsR
+         OL3bQM72OBfjRXfpWQyyD7SN/v2wp2fPEczkKg3N0pDGc3ZidxiGrVzslZVLJz22MvDq
+         ccoCezNYldU17RH/TAIdJ++MhPMIOiDFC1LaTfF5V2Nt6Z5wA6UGRm2F/Z5i9KtjDAi2
+         R23MLDdBgriKi0wT6zGq9zmsyMlmEQzGWPbt4s01X3dt9eGUZYxhvcPbx76C+h/02QRM
+         uXxA==
+X-Forwarded-Encrypted: i=1;
+ AJvYcCW414+PPAbNqc7yaeMJplAWwWE6cZsO/60KwheNOdRMc7D6DpinIT9y/yXV3KcXnxevojv/ISKufV06LzTId5jiT9qlp8+16TLmy86AcPx0XGKviJx9eeGUBRaI79+gNn0rNpwMJn3tlzesEXEQy1/ZXGpH7b6Mxkg=
+X-Gm-Message-State: AOJu0YyN9C9tLW/CzRZk8rhOhLpAirg5SR/OtCWJ5RBAN/sCsRKhT+yc
+	bq3ximl+snBINw1f8PbuEG31Hw96CG196AqkqrKoOchhGzS6z23o
+X-Google-Smtp-Source: 
+ AGHT+IFdEd2RYXTkQHnppetkRnPxVnjNwWo7EOTHuMMvCLx724tUqzZ30NaYb3Avu9qRLku1FgXVlg==
+X-Received: by 2002:a19:f80c:0:b0:513:fad:3a79 with SMTP id
+ a12-20020a19f80c000000b005130fad3a79mr2169278lff.41.1709234835537;
+        Thu, 29 Feb 2024 11:27:15 -0800 (PST)
+Received: from [172.30.32.188] ([2001:8f8:183b:6ebc::d35])
+        by smtp.gmail.com with ESMTPSA id
+ j20-20020a05600c1c1400b00412bca49a5bsm2853944wms.42.2024.02.29.11.27.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 Feb 2024 11:27:15 -0800 (PST)
+From: Alexey Charkov <alchark@gmail.com>
+Date: Thu, 29 Feb 2024 23:26:36 +0400
+Subject: [PATCH v3 5/5] arm64: dts: rockchip: Add further granularity in
+ RK3588 CPU OPPs
+MIME-Version: 1.0
+Message-Id: <20240229-rk-dts-additions-v3-5-6afe8473a631@gmail.com>
+References: <20240229-rk-dts-additions-v3-0-6afe8473a631@gmail.com>
+In-Reply-To: <20240229-rk-dts-additions-v3-0-6afe8473a631@gmail.com>
+To: Rob Herring <robh+dt@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+ Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>
+Cc: Daniel Lezcano <daniel.lezcano@linaro.org>,
+ Dragan Simic <dsimic@manjaro.org>, Viresh Kumar <viresh.kumar@linaro.org>,
+ Chen-Yu Tsai <wens@kernel.org>, devicetree@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
+ linux-kernel@vger.kernel.org, Alexey Charkov <alchark@gmail.com>
+X-Mailer: b4 0.12.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1709234816; l=5519;
+ i=alchark@gmail.com; s=20240125; h=from:subject:message-id;
+ bh=j/++tKpf6nxbbeFDehv27/TaZ3F22dBnSGotJt3JR3A=;
+ b=tzN5fmgoHAnEdXpez23vQkmx1XeBtubWfNRVPi+kjuzKwBQ26lA/DVX4u4pp+xiQzv6TShJfT
+ nXrscsS74dmC2+s4BeMzPAbU4r8/Gbj+Zb4sS4yUglJHYPXwx79momW
+X-Developer-Key: i=alchark@gmail.com; a=ed25519;
+ pk=xRO8VeD3J5jhwe0za0aHt2LDumQr8cm0Ls7Jz3YGimk=
+X-CRM114-Version: 20100106-BlameMichelson ( TRE 0.8.0 (BSD) ) MR-646709E3 
+X-CRM114-CacheID: sfid-20240229_112718_506432_31733827 
+X-CRM114-Status: GOOD (  10.16  )
+X-BeenThere: linux-rockchip@lists.infradead.org
+X-Mailman-Version: 2.1.34
+Precedence: list
+List-Id: Upstream kernel work for Rockchip platforms
+ <linux-rockchip.lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-rockchip>,
+ <mailto:linux-rockchip-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-rockchip/>
+List-Post: <mailto:linux-rockchip@lists.infradead.org>
+List-Help: <mailto:linux-rockchip-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-rockchip>,
+ <mailto:linux-rockchip-request@lists.infradead.org?subject=subscribe>
+Sender: "Linux-rockchip" <linux-rockchip-bounces@lists.infradead.org>
+Errors-To: 
+ linux-rockchip-bounces+linux-rockchip=archiver.kernel.org@lists.infradead.org
+
+This introduces additional OPPs that share the same voltage as
+another OPP already present in the .dtsi but with lower frequency.
+
+The idea is to try and limit system throughput more gradually upon
+reaching the throttling condition for workloads that are close to
+sustainable power already, thus avoiding needless performance loss.
+
+My limited synthetic benchmarking [1] showed around 3.8% performance
+benefit when these are in place, other things equal (not meant to
+be comprehensive). Though dmesg complains about these OPPs being
+'inefficient':
+
+[    9.009561] cpu cpu0: EM: OPP:816000 is inefficient
+[    9.009580] cpu cpu0: EM: OPP:600000 is inefficient
+[    9.009591] cpu cpu0: EM: OPP:408000 is inefficient
+[    9.011370] cpu cpu4: EM: OPP:2352000 is inefficient
+[    9.011379] cpu cpu4: EM: OPP:2304000 is inefficient
+[    9.011384] cpu cpu4: EM: OPP:2256000 is inefficient
+[    9.011389] cpu cpu4: EM: OPP:600000 is inefficient
+[    9.011393] cpu cpu4: EM: OPP:408000 is inefficient
+[    9.012978] cpu cpu6: EM: OPP:2352000 is inefficient
+[    9.012987] cpu cpu6: EM: OPP:2304000 is inefficient
+[    9.012992] cpu cpu6: EM: OPP:2256000 is inefficient
+[    9.012996] cpu cpu6: EM: OPP:600000 is inefficient
+[    9.013000] cpu cpu6: EM: OPP:408000 is inefficient
+
+[1] https://lore.kernel.org/linux-rockchip/CABjd4YxqarUCbZ-a2XLe3TWJ-qjphGkyq=wDnctnEhdoSdPPpw@mail.gmail.com/T/#me92aa0ee25e6eeb1d1501ce85f5af4e58b3b13c5
+
+Signed-off-by: Alexey Charkov <alchark@gmail.com>
+---
+ arch/arm64/boot/dts/rockchip/rk3588s.dtsi | 87 +++++++++++++++++++++++++++++++
+ 1 file changed, 87 insertions(+)
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+index bd39c5c47bfb..6b4ecc7ab37d 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+@@ -328,6 +328,21 @@ cluster0_opp_table: opp-table-cluster0 {
+ 		compatible = "operating-points-v2";
+ 		opp-shared;
+ 
++		opp-408000000 {
++			opp-hz = /bits/ 64 <408000000>;
++			opp-microvolt = <675000 675000 950000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-600000000 {
++			opp-hz = /bits/ 64 <600000000>;
++			opp-microvolt = <675000 675000 950000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-816000000 {
++			opp-hz = /bits/ 64 <816000000>;
++			opp-microvolt = <675000 675000 950000>;
++			clock-latency-ns = <40000>;
++		};
+ 		opp-1008000000 {
+ 			opp-hz = /bits/ 64 <1008000000>;
+ 			opp-microvolt = <675000 675000 950000>;
+@@ -360,6 +375,27 @@ cluster1_opp_table: opp-table-cluster1 {
+ 		compatible = "operating-points-v2";
+ 		opp-shared;
+ 
++		opp-408000000 {
++			opp-hz = /bits/ 64 <408000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++			opp-suspend;
++		};
++		opp-600000000 {
++			opp-hz = /bits/ 64 <600000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-816000000 {
++			opp-hz = /bits/ 64 <816000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1008000000 {
++			opp-hz = /bits/ 64 <1008000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++		};
+ 		opp-1200000000 {
+ 			opp-hz = /bits/ 64 <1200000000>;
+ 			opp-microvolt = <675000 675000 1000000>;
+@@ -390,6 +426,21 @@ opp-2208000000 {
+ 			opp-microvolt = <987500 987500 1000000>;
+ 			clock-latency-ns = <40000>;
+ 		};
++		opp-2256000000 {
++			opp-hz = /bits/ 64 <2256000000>;
++			opp-microvolt = <1000000 1000000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2304000000 {
++			opp-hz = /bits/ 64 <2304000000>;
++			opp-microvolt = <1000000 1000000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2352000000 {
++			opp-hz = /bits/ 64 <2352000000>;
++			opp-microvolt = <1000000 1000000 1000000>;
++			clock-latency-ns = <40000>;
++		};
+ 		opp-2400000000 {
+ 			opp-hz = /bits/ 64 <2400000000>;
+ 			opp-microvolt = <1000000 1000000 1000000>;
+@@ -401,6 +452,27 @@ cluster2_opp_table: opp-table-cluster2 {
+ 		compatible = "operating-points-v2";
+ 		opp-shared;
+ 
++		opp-408000000 {
++			opp-hz = /bits/ 64 <408000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++			opp-suspend;
++		};
++		opp-600000000 {
++			opp-hz = /bits/ 64 <600000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-816000000 {
++			opp-hz = /bits/ 64 <816000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-1008000000 {
++			opp-hz = /bits/ 64 <1008000000>;
++			opp-microvolt = <675000 675000 1000000>;
++			clock-latency-ns = <40000>;
++		};
+ 		opp-1200000000 {
+ 			opp-hz = /bits/ 64 <1200000000>;
+ 			opp-microvolt = <675000 675000 1000000>;
+@@ -431,6 +503,21 @@ opp-2208000000 {
+ 			opp-microvolt = <987500 987500 1000000>;
+ 			clock-latency-ns = <40000>;
+ 		};
++		opp-2256000000 {
++			opp-hz = /bits/ 64 <2256000000>;
++			opp-microvolt = <1000000 1000000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2304000000 {
++			opp-hz = /bits/ 64 <2304000000>;
++			opp-microvolt = <1000000 1000000 1000000>;
++			clock-latency-ns = <40000>;
++		};
++		opp-2352000000 {
++			opp-hz = /bits/ 64 <2352000000>;
++			opp-microvolt = <1000000 1000000 1000000>;
++			clock-latency-ns = <40000>;
++		};
+ 		opp-2400000000 {
+ 			opp-hz = /bits/ 64 <2400000000>;
+ 			opp-microvolt = <1000000 1000000 1000000>;
