@@ -38,6 +38,7 @@ jobs:
         env:
           PUSH: '1'
           USERNAME: ${{ github.actor }}
+          PLATFORM: linux/arm64
           PROGRESS: plain
           CI_ARGS: "--cache-from=ghcr.io/${{ github.actor }}/sbc-turingrk1:cache --cache-to=ghcr.io/${{ github.actor }}/sbc-turingrk1:cache"
 

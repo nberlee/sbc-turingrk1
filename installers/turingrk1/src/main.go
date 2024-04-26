@@ -88,6 +88,22 @@ func (i *BoardInstaller) Install(options overlay.InstallOptions[boardExtraOption
 		return err
 	}
 
+	src = filepath.Join(options.ArtifactsPath, "arm64/kernel/vmlinuz")
+	dst = filepath.Join(options.MountPrefix, "usr/install/arm64/vmlinuz")
+
+	err = copyFileAndCreateDir(src, dst)
+	if err != nil {
+		return err
+	}
+
+	src = filepath.Join(options.ArtifactsPath, "arm64/kernel/vmlinuz")
+	dst = "/overlay/usr/install/arm64/vmlinuz"
+
+	err = copyFileAndCreateDir(src, dst)
+	if err != nil {
+		return err
+	}
+
 	return nil
 
 }
