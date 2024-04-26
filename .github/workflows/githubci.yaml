@@ -42,17 +42,23 @@ jobs:
           PROGRESS: plain
           CI_ARGS: "--cache-from=ghcr.io/${{ github.actor }}/sbc-turingrk1:cache --cache-to=ghcr.io/${{ github.actor }}/sbc-turingrk1:cache"
 
+      - name: Create Imager image
+        run: |
+          IMAGETAG=$(git describe --tag --always --dirty --match v[0-9]\*)
+          docker build -t ghcr.io/${{ github.actor }}/imager:$IMAGETAG - <<EOD
+          FROM ghcr.io/siderolabs/imager:v1.7.0
+          COPY --from=ghcr.io/${{ github.actor }}/sbc-turingrk1:$IMAGETAG /artifacts/arm64/kernel/vmlinuz /usr/install/arm64/vmlinuz
+          EOD
+          docker push ghcr.io/${{ github.actor }}/imager:$IMAGETAG
+
+
       - name: Create Talos image and installer
         run: |
           curl -sL "https://github.com/google/go-containerregistry/releases/download/v0.19.1/go-containerregistry_Linux_arm64.tar.gz" | tar -zxv -C /usr/local/bin/ crane
           IMAGETAG=$(git describe --tag --always --dirty --match v[0-9]\*)
-          docker build --build-arg IMAGETAG=$IMAGETAG -t imager - <<EOD
-          FROM ghcr.io/siderolabs/imager:v1.7.0
-          COPY --from=ghcr.io/${{ github.actor }}/sbc-turingrk1:$IMAGETAG /artifacts/arm64/kernel/vmlinuz /usr/install/arm64/vmlinuz
-          EOD
-          docker run -v $(pwd)/_out:/out --rm -t imager installer --arch arm64 --overlay-image ghcr.io/nberlee/sbc-turingrk1:$IMAGETAG --overlay-name=turingrk1
+          docker run -v $(pwd)/_out:/out --rm -t ghcr.io/${{ github.actor }}/imager:$IMAGETAG installer --arch arm64 --overlay-image ghcr.io/nberlee/sbc-turingrk1:$IMAGETAG --overlay-name=turingrk1
           crane push _out/installer-arm64.tar ghcr.io/nberlee/installer:$IMAGETAG
-          docker run -v $(pwd)/_out:/out -v /dev:/dev --privileged --rm -t imager metal --arch arm64 --overlay-image ghcr.io/nberlee/sbc-turingrk1:$IMAGETAG --overlay-name=turingrk1
+          docker run -v $(pwd)/_out:/out -v /dev:/dev --privileged --rm -t ghcr.io/${{ github.actor }}/imager:$IMAGETAG metal --arch arm64 --overlay-image ghcr.io/nberlee/sbc-turingrk1:$IMAGETAG --overlay-name=turingrk1
 
       - uses: actions/upload-artifact@v4
         with:
