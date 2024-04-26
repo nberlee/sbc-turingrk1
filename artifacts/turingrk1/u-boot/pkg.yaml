@@ -35,7 +35,7 @@ steps:
         sed -i "s/CONFIG_TOOLS_LIBCRYPTO=y/# CONFIG_TOOLS_LIBCRYPTO is not set/" .config
     build:
       - |
-        export ROCKCHIP_TPL=$(pwd)/rk3588_ddr_lp4_2112MHz_lp5_2736MHz_v1.12_patched.bin
+        export ROCKCHIP_TPL=$(pwd)/rk3588_ddr_lp4_2112MHz_lp5_2400MHz_v1.16_patched.bin
         make -j $(nproc) HOSTLDLIBS_mkimage="-lssl -lcrypto" BL31=/libs/arm-trusted-firmware/rk3588/bl31.elf
     install:
       - |
