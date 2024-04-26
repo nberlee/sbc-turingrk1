@@ -1,9 +1,6 @@
 arch: arm64
 platform: metal
 secureboot: false
-input:
-  kernel:
-    path: /overlay/artifacts/arm64/kernel/vmlinuz
 output:
   kind: image
   outFormat: .xz

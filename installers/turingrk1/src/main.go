@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/siderolabs/go-copy/copy"
 	"github.com/siderolabs/talos/pkg/machinery/overlay"
@@ -33,8 +34,8 @@ func (i *turingRK1Installer) GetOptions(extra turingRK1ExtraOptions) (overlay.Op
 	kernelArgs := []string{
 		"cma=128MB",
 		"console=tty0",
-		"console=ttyS2,115200",
 		"console=ttyS9,115200",
+		"console=ttyS2,115200",
 		"sysctl.kernel.kexec_load_disabled=1",
 		"talos.dashboard.disabled=1",
 	}
@@ -52,20 +53,20 @@ func (i *turingRK1Installer) Install(options overlay.InstallOptions[turingRK1Ext
 	var err error
 
 	var (
-		uBootBin = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip.bin")
-		//uBootSpiBin = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip-spi.bin")
+		uBootBin    = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip.bin")
+		uBootSpiBin = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip-spi.bin")
 	)
 
 	// Use the spi image to flash the eMMC when the install disk is NVMe as the NVMe needs the SPI image on the eMMC to boot.
-	/*
-		if strings.HasPrefix(options.InstallDisk, "/dev/nvme") {
-			err = uBootLoaderInstall(uBootSpiBin, "/dev/mmcblk0")
-			if err != nil {
-				return err
-			}
+
+	if strings.HasPrefix(options.InstallDisk, "/dev/nvme") {
+		err = uBootLoaderInstall(uBootSpiBin, "/dev/mmcblk0", 0)
+		if err != nil {
+			return err
 		}
-	*/
-	err = uBootLoaderInstall(uBootBin, options.InstallDisk)
+	}
+
+	err = uBootLoaderInstall(uBootBin, options.InstallDisk, off)
 	if err != nil {
 		return err
 	}
@@ -92,7 +93,7 @@ func copyFileAndCreateDir(src, dst string) error {
 	return copy.File(src, dst)
 }
 
-func uBootLoaderInstall(uBootBin, installDisk string) error {
+func uBootLoaderInstall(uBootBin, installDisk string, offset int64) error {
 	var f *os.File
 
 	f, err := os.OpenFile(installDisk, os.O_RDWR|unix.O_CLOEXEC, 0o666)
@@ -107,7 +108,7 @@ func uBootLoaderInstall(uBootBin, installDisk string) error {
 		return err
 	}
 
-	if _, err = f.WriteAt(uboot, off); err != nil {
+	if _, err = f.WriteAt(uboot, offset); err != nil {
 		return err
 	}
 
