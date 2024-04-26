@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/siderolabs/go-copy/copy"
 	"github.com/siderolabs/talos/pkg/machinery/overlay"
@@ -17,87 +16,62 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func main() {
-	adapter.Execute(&BoardInstaller{})
-}
-
-type BoardInstaller struct{}
-
-type boardExtraOptions struct {
-	Console    []string `json:"console"`
-	ConfigFile string   `json:"configFile"`
-}
-
 const (
 	off int64 = 512 * 64
 	dtb       = "rockchip/rk3588-turing-rk1.dtb"
 )
 
-func (i *BoardInstaller) GetOptions(extra boardExtraOptions) (overlay.Options, error) {
+func main() {
+	adapter.Execute(&turingRK1Installer{})
+}
+
+type turingRK1Installer struct{}
+
+type turingRK1ExtraOptions struct{}
+
+func (i *turingRK1Installer) GetOptions(extra turingRK1ExtraOptions) (overlay.Options, error) {
 	kernelArgs := []string{
 		"cma=128MB",
-		"console=tty0,115200",
+		"console=tty0",
 		"console=ttyS2,115200",
 		"console=ttyS9,115200",
 		"sysctl.kernel.kexec_load_disabled=1",
 		"talos.dashboard.disabled=1",
 	}
 
-	kernelArgs = append(kernelArgs, extra.Console...)
-
 	return overlay.Options{
 		Name:       "turingrk1",
 		KernelArgs: kernelArgs,
+		PartitionOptions: overlay.PartitionOptions{
+			Offset: 2048 * 10,
+		},
 	}, nil
 }
 
-func (i *BoardInstaller) Install(options overlay.InstallOptions[boardExtraOptions]) error {
+func (i *turingRK1Installer) Install(options overlay.InstallOptions[turingRK1ExtraOptions]) error {
 	var err error
 
 	var (
-		uBootBin    = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip.bin")
-		uBootSpiBin = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip-spi.bin")
+		uBootBin = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip.bin")
+		//uBootSpiBin = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip-spi.bin")
 	)
 
 	// Use the spi image to flash the eMMC when the install disk is NVMe as the NVMe needs the SPI image on the eMMC to boot.
-	if strings.HasPrefix(options.InstallDisk, "/dev/nvme") {
-		err = uBootLoaderInstall(uBootSpiBin, "/dev/mmcblk0")
-		if err != nil {
-			return err
+	/*
+		if strings.HasPrefix(options.InstallDisk, "/dev/nvme") {
+			err = uBootLoaderInstall(uBootSpiBin, "/dev/mmcblk0")
+			if err != nil {
+				return err
+			}
 		}
-	}
-
+	*/
 	err = uBootLoaderInstall(uBootBin, options.InstallDisk)
 	if err != nil {
 		return err
 	}
 
 	src := filepath.Join(options.ArtifactsPath, "arm64/dtb", dtb)
-	dst := filepath.Join(options.MountPrefix, "/boot/EFI/dtb", dtb)
-
-	err = copyFileAndCreateDir(src, dst)
-	if err != nil {
-		return err
-	}
-
-	src = filepath.Join(options.ArtifactsPath, "arm64/kernel/vmlinuz")
-	dst = "/usr/install/arm64/vmlinuz"
-
-	err = copyFileAndCreateDir(src, dst)
-	if err != nil {
-		return err
-	}
-
-	src = filepath.Join(options.ArtifactsPath, "arm64/kernel/vmlinuz")
-	dst = filepath.Join(options.MountPrefix, "usr/install/arm64/vmlinuz")
-
-	err = copyFileAndCreateDir(src, dst)
-	if err != nil {
-		return err
-	}
-
-	src = filepath.Join(options.ArtifactsPath, "arm64/kernel/vmlinuz")
-	dst = "/overlay/usr/install/arm64/vmlinuz"
+	dst := filepath.Join(options.MountPrefix, "boot/EFI/dtb", dtb)
 
 	err = copyFileAndCreateDir(src, dst)
 	if err != nil {
@@ -119,6 +93,8 @@ func copyFileAndCreateDir(src, dst string) error {
 }
 
 func uBootLoaderInstall(uBootBin, installDisk string) error {
+	var f *os.File
+
 	f, err := os.OpenFile(installDisk, os.O_RDWR|unix.O_CLOEXEC, 0o666)
 	if err != nil {
 		return fmt.Errorf("failed to open %s: %w", installDisk, err)
