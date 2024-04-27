@@ -60,13 +60,19 @@ func (i *turingRK1Installer) Install(options overlay.InstallOptions[turingRK1Ext
 	// Use the spi image to flash the eMMC when the install disk is NVMe as the NVMe needs the SPI image on the eMMC to boot.
 
 	if strings.HasPrefix(options.InstallDisk, "/dev/nvme") {
-		err = uBootLoaderInstall(uBootSpiBin, "/dev/mmcblk0", 0)
+		// first we flash the whole uBootBin to the eMMC
+		err = uBootLoaderInstall(uBootBin, "/dev/mmcblk0")
+		if err != nil {
+			return err
+		}
+		// then we flash to SPI image over it, as the config for the SPI image prefers to boot from NVMe
+		err = uBootLoaderInstall(uBootSpiBin, "/dev/mmcblk0")
 		if err != nil {
 			return err
 		}
 	}
 
-	err = uBootLoaderInstall(uBootBin, options.InstallDisk, off)
+	err = uBootLoaderInstall(uBootBin, options.InstallDisk)
 	if err != nil {
 		return err
 	}
@@ -93,7 +99,7 @@ func copyFileAndCreateDir(src, dst string) error {
 	return copy.File(src, dst)
 }
 
-func uBootLoaderInstall(uBootBin, installDisk string, offset int64) error {
+func uBootLoaderInstall(uBootBin, installDisk string) error {
 	var f *os.File
 
 	f, err := os.OpenFile(installDisk, os.O_RDWR|unix.O_CLOEXEC, 0o666)
@@ -108,7 +114,7 @@ func uBootLoaderInstall(uBootBin, installDisk string, offset int64) error {
 		return err
 	}
 
-	if _, err = f.WriteAt(uboot, offset); err != nil {
+	if _, err = f.WriteAt(uboot, off); err != nil {
 		return err
 	}
 

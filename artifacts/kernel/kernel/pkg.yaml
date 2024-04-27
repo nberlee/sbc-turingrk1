@@ -12,18 +12,12 @@ steps:
 
         mkdir -p /rootfs/artifacts/arm64/kernel
 
-        mkdir -p /rootfs/artifacts/arm64/dtb
+        mkdir -p /rootfs/artifacts/arm64/dtb/rockchip
         mkdir -p /rootfs/artifacts/certs
         cp /src/certs/signing_key.x509 /rootfs/artifacts/certs/signing_key.x509
 
         mv arch/arm64/boot/Image /rootfs/artifacts/arm64/kernel/vmlinuz
-        cd ./arch/arm64/boot/dts
-        for vendor in $(find . -not -path . -type d); do
-          dest="/rootfs/artifacts/arm64/dtb/$vendor"
-          mkdir -v $dest
-          find ./$vendor/* -type f -name "*.dtb" -exec cp {} $dest \;
-        done
-        cd -
+        mv arch/arm64/boot/dts/rockchip/rk3588-turing-rk1.dtb /rootfs/artifacts/arm64/dtb/rockchip/rk3588-turing-rk1.dtb
 
         #export KERNELRELEASE=$(cat include/config/kernel.release)
         #make -j $(nproc) modules_install DEPMOD=/toolchain/bin/depmod INSTALL_MOD_PATH=/rootfs INSTALL_MOD_STRIP=1
