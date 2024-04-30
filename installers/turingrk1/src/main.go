@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/siderolabs/go-copy/copy"
 	"github.com/siderolabs/talos/pkg/machinery/overlay"
@@ -53,24 +52,9 @@ func (i *turingRK1Installer) Install(options overlay.InstallOptions[turingRK1Ext
 	var err error
 
 	var (
-		uBootBin    = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip.bin")
-		uBootSpiBin = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip-spi.bin")
+		uBootBin = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip.bin")
+		//uBootSpiBin = filepath.Join(options.ArtifactsPath, "arm64/u-boot/turingrk1/u-boot-rockchip-spi.bin")
 	)
-
-	// Use the spi image to flash the eMMC when the install disk is NVMe as the NVMe needs the SPI image on the eMMC to boot.
-
-	if strings.HasPrefix(options.InstallDisk, "/dev/nvme") {
-		// first we flash the whole uBootBin to the eMMC
-		err = uBootLoaderInstall(uBootBin, "/dev/mmcblk0")
-		if err != nil {
-			return err
-		}
-		// then we flash to SPI image over it, as the config for the SPI image prefers to boot from NVMe
-		err = uBootLoaderInstall(uBootSpiBin, "/dev/mmcblk0")
-		if err != nil {
-			return err
-		}
-	}
 
 	err = uBootLoaderInstall(uBootBin, options.InstallDisk)
 	if err != nil {
