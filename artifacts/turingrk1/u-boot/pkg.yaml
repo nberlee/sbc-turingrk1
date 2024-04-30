@@ -32,7 +32,6 @@ steps:
         cp -f /pkg/rkbin/*.bin .
       - |
         make turing-rk1-rk3588_defconfig
-        sed -i "s/CONFIG_TOOLS_LIBCRYPTO=y/# CONFIG_TOOLS_LIBCRYPTO is not set/" .config
     build:
       - |
         export ROCKCHIP_TPL=$(pwd)/rk3588_ddr_lp4_2112MHz_lp5_2400MHz_v1.16_patched.bin

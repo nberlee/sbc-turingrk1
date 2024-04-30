@@ -1,0 +1,167 @@
+From patchwork Fri Nov 17 23:24:34 2023
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Patchwork-Submitter: Jonas Karlman <jonas@kwiboo.se>
+X-Patchwork-Id: 1865310
+X-Patchwork-Delegate: ykai007@gmail.com
+Return-Path: <u-boot-bounces@lists.denx.de>
+X-Original-To: incoming@patchwork.ozlabs.org
+Delivered-To: patchwork-incoming@legolas.ozlabs.org
+Authentication-Results: legolas.ozlabs.org;
+	dkim=pass (2048-bit key;
+ secure) header.d=kwiboo.se header.i=@kwiboo.se header.a=rsa-sha256
+ header.s=fe-e1b5cab7be header.b=CYwRBDmB;
+	dkim-atps=neutral
+Authentication-Results: legolas.ozlabs.org;
+ spf=pass (sender SPF authorized) smtp.mailfrom=lists.denx.de
+ (client-ip=2a01:238:438b:c500:173d:9f52:ddab:ee01; helo=phobos.denx.de;
+ envelope-from=u-boot-bounces@lists.denx.de; receiver=patchwork.ozlabs.org)
+Received: from phobos.denx.de (phobos.denx.de
+ [IPv6:2a01:238:438b:c500:173d:9f52:ddab:ee01])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (secp384r1))
+	(No client certificate requested)
+	by legolas.ozlabs.org (Postfix) with ESMTPS id 4SXCgw4sJBz1yS7
+	for <incoming@patchwork.ozlabs.org>; Sat, 18 Nov 2023 10:25:48 +1100 (AEDT)
+Received: from h2850616.stratoserver.net (localhost [IPv6:::1])
+	by phobos.denx.de (Postfix) with ESMTP id 4E22E874A1;
+	Sat, 18 Nov 2023 00:25:43 +0100 (CET)
+Authentication-Results: phobos.denx.de;
+ dmarc=pass (p=none dis=none) header.from=kwiboo.se
+Authentication-Results: phobos.denx.de;
+ spf=pass smtp.mailfrom=u-boot-bounces@lists.denx.de
+Authentication-Results: phobos.denx.de;
+	dkim=pass (2048-bit key;
+ secure) header.d=kwiboo.se header.i=@kwiboo.se header.b="CYwRBDmB";
+	dkim-atps=neutral
+Received: by phobos.denx.de (Postfix, from userid 109)
+ id C03DF874E9; Sat, 18 Nov 2023 00:25:23 +0100 (CET)
+X-Spam-Checker-Version: SpamAssassin 3.4.2 (2018-09-13) on phobos.denx.de
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.1 required=5.0 tests=BAYES_00,DKIM_SIGNED,
+ DKIM_VALID,DKIM_VALID_AU,DKIM_VALID_EF,SPF_HELO_NONE,SPF_PASS,
+ T_SCC_BODY_TEXT_LINE autolearn=ham autolearn_force=no version=3.4.2
+Received: from smtp.forwardemail.net (smtp.forwardemail.net [149.28.215.223])
+ (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+ (No client certificate requested)
+ by phobos.denx.de (Postfix) with ESMTPS id 25C0386DA2
+ for <u-boot@lists.denx.de>; Sat, 18 Nov 2023 00:25:05 +0100 (CET)
+Authentication-Results: phobos.denx.de;
+ dmarc=pass (p=none dis=none) header.from=kwiboo.se
+Authentication-Results: phobos.denx.de; spf=pass
+ smtp.mailfrom=SRS0=9f74=G7=kwiboo.se=jonas@fe-bounces.kwiboo.se
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kwiboo.se;
+ h=Content-Transfer-Encoding: MIME-Version: References: In-Reply-To:
+ Message-ID: Date: Subject: Cc: To: From; q=dns/txt; s=fe-e1b5cab7be;
+ t=1700263491; bh=dpp4fg5Q+zE2hjc4aQo4qsEaOpyN3rbz/NbKRpPauLw=;
+ b=CYwRBDmB683BJ7Er3opl8Ei0emCyE7NueYDPiqSnHxUsEbfSF0XavwybwBNb1yn6to6IFr5qx
+ HoKc8EuKwA/CxpkpvDC9rkBmvr84wXmqsrdkAYq2lka9bkJzBDUZlaLqrtFEbODQhBl001Bwqve
+ sNLhgXjVbc8Q8vMWK6dib6jsq2oGUKvA4U2VKaebGBMQS3JxalfxTvYcWOujMp++MbJZfYn187N
+ rjokZYBUT6NYoSrP88EvLJhCmYXDxz0hW1hW8k9gzyMpTypNLYSdrgnaErWSMJ0BzZQZjs/+dQa
+ aRFXNP3gdiKLZHyLmGXlFr6C4ubu3RcmRtIr2CN6o8/w==
+From: Jonas Karlman <jonas@kwiboo.se>
+To: Kever Yang <kever.yang@rock-chips.com>, Simon Glass <sjg@chromium.org>,
+ Philipp Tomsich <philipp.tomsich@vrull.eu>, Eugen Hristev
+ <eugen.hristev@collabora.com>, Jonas Karlman <jonas@kwiboo.se>
+Cc: John Clark <inindev@gmail.com>, Slawomir Stepien <sst@poczta.fm>,
+ Quentin Schulz <quentin.schulz@theobroma-systems.com>, u-boot@lists.denx.de
+Subject: [PATCH v2 1/4] rockchip: rk3588: Fix boot from SPI flash
+Date: Fri, 17 Nov 2023 23:24:34 +0000
+Message-ID: <20231117232442.1430276-2-jonas@kwiboo.se>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20231117232442.1430276-1-jonas@kwiboo.se>
+References: <20231117232442.1430276-1-jonas@kwiboo.se>
+MIME-Version: 1.0
+X-Report-Abuse-To: abuse@forwardemail.net
+X-Report-Abuse: abuse@forwardemail.net
+X-Complaints-To: abuse@forwardemail.net
+X-ForwardEmail-Version: 0.4.40
+X-ForwardEmail-Sender: rfc822; jonas@kwiboo.se, smtp.forwardemail.net,
+ 149.28.215.223
+X-ForwardEmail-ID: 6557f642943be35dca803c17
+X-BeenThere: u-boot@lists.denx.de
+X-Mailman-Version: 2.1.39
+Precedence: list
+List-Id: U-Boot discussion <u-boot.lists.denx.de>
+List-Unsubscribe: <https://lists.denx.de/options/u-boot>,
+ <mailto:u-boot-request@lists.denx.de?subject=unsubscribe>
+List-Archive: <https://lists.denx.de/pipermail/u-boot/>
+List-Post: <mailto:u-boot@lists.denx.de>
+List-Help: <mailto:u-boot-request@lists.denx.de?subject=help>
+List-Subscribe: <https://lists.denx.de/listinfo/u-boot>,
+ <mailto:u-boot-request@lists.denx.de?subject=subscribe>
+Errors-To: u-boot-bounces@lists.denx.de
+Sender: "U-Boot" <u-boot-bounces@lists.denx.de>
+X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
+X-Virus-Status: Clean
+
+The commit fd6e425be243 ("rockchip: rk3588-rock-5b: Enable boot from SPI
+NOR flash") added a new BROM_BOOTSOURCE_SPINOR_RK3588 with value 6.
+
+At the time the reason for this new bootsource id value 6 was unknown.
+
+We now know that the BootRom on RK3588 use different bootsource id
+values depending on the iomux used by the flash spi controller, and not
+by the type of spi nor or spi nand flash used.
+
+Add the following enum values and use them for RK3588 boot_devices.
+
+- BROM_BOOTSOURCE_FSPI_M0 = 3
+- BROM_BOOTSOURCE_FSPI_M1 = 4
+- BROM_BOOTSOURCE_FSPI_M2 = 6
+
+Fixes: fd6e425be243 ("rockchip: rk3588-rock-5b: Enable boot from SPI NOR flash")
+Signed-off-by: Jonas Karlman <jonas@kwiboo.se>
+Tested-by: Slawomir Stepien <sst@poczta.fm>
+---
+v2:
+- Move FSPI M0/M1/M2 enum values from bootrom.h to rk3588.c
+- Add t-b tag
+
+ arch/arm/include/asm/arch-rockchip/bootrom.h |  1 -
+ arch/arm/mach-rockchip/rk3588/rk3588.c       | 16 ++++++++++++++--
+ 2 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/include/asm/arch-rockchip/bootrom.h b/arch/arm/include/asm/arch-rockchip/bootrom.h
+index 7dab18fbc3fb..4276a0f6811a 100644
+--- a/arch/arm/include/asm/arch-rockchip/bootrom.h
++++ b/arch/arm/include/asm/arch-rockchip/bootrom.h
+@@ -48,7 +48,6 @@ enum {
+ 	BROM_BOOTSOURCE_SPINOR = 3,
+ 	BROM_BOOTSOURCE_SPINAND = 4,
+ 	BROM_BOOTSOURCE_SD = 5,
+-	BROM_BOOTSOURCE_SPINOR_RK3588 = 6,
+ 	BROM_BOOTSOURCE_USB = 10,
+ 	BROM_LAST_BOOTSOURCE = BROM_BOOTSOURCE_USB
+ };
+diff --git a/arch/arm/mach-rockchip/rk3588/rk3588.c b/arch/arm/mach-rockchip/rk3588/rk3588.c
+index b1f535fad505..7b0349ec2577 100644
+--- a/arch/arm/mach-rockchip/rk3588/rk3588.c
++++ b/arch/arm/mach-rockchip/rk3588/rk3588.c
+@@ -37,11 +37,23 @@ DECLARE_GLOBAL_DATA_PTR;
+ #define BUS_IOC_GPIO2D_IOMUX_SEL_H	0x5c
+ #define BUS_IOC_GPIO3A_IOMUX_SEL_L	0x60
+ 
++/**
++ * Boot-device identifiers used by the BROM on RK3588 when device is booted
++ * from SPI flash. IOMUX used for SPI flash affect the value used by the BROM
++ * and not the type of SPI flash used.
++ */
++enum {
++	BROM_BOOTSOURCE_FSPI_M0 = 3,
++	BROM_BOOTSOURCE_FSPI_M1 = 4,
++	BROM_BOOTSOURCE_FSPI_M2 = 6,
++};
++
+ const char * const boot_devices[BROM_LAST_BOOTSOURCE + 1] = {
+ 	[BROM_BOOTSOURCE_EMMC] = "/mmc@fe2e0000",
+-	[BROM_BOOTSOURCE_SPINOR] = "/spi@fe2b0000/flash@0",
++	[BROM_BOOTSOURCE_FSPI_M0] = "/spi@fe2b0000/flash@0",
++	[BROM_BOOTSOURCE_FSPI_M1] = "/spi@fe2b0000/flash@0",
++	[BROM_BOOTSOURCE_FSPI_M2] = "/spi@fe2b0000/flash@0",
+ 	[BROM_BOOTSOURCE_SD] = "/mmc@fe2c0000",
+-	[BROM_BOOTSOURCE_SPINOR_RK3588] = "/spi@fe2b0000/flash@0",
+ };
+ 
+ static struct mm_region rk3588_mem_map[] = {
