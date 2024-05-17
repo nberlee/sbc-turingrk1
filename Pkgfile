@@ -4,9 +4,9 @@ format: v1alpha2
 
 vars:
   # renovate: datasource=github-tags depName=ARM-software/arm-trusted-firmware
-  arm_trusted_firmware_version: lts-v2.10.3
-  arm_trusted_firmware_sha256: 29533c6d60643708abe5ed3b73d3c531f80dcf3bc706680595847ba19d2578d9
-  arm_trusted_firmware_sha512: e7d40fc4bbe7dfd4cebe0e8d7510d1594d4045cccad7c270c1ef96b44d6fdbe7d88854bf2fa45fb5e0feae11460ab492a4e976cdf6e6511433d83a6d4bafe0db
+  arm_trusted_firmware_version: lts-v2.10.4
+  arm_trusted_firmware_sha256: ba215404fe9db26e5f2cef3fdce17b7c8ed344a2a1d592dd01a5f1c5e72cfdbd
+  arm_trusted_firmware_sha512: 0b0e634ba7b1bf3d2a0ef429391f9a6c350abe373b0563e3932f0347246b773238593036674cbb958fffce36c7449f9ebb3ee340650a3184c3e052487fae656b
 
   # renovate: datasource=github-tags extractVersion=^v(?<version>.*)$ depName=u-boot/u-boot
   uboot_version: 2024.01
