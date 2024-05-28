@@ -1,4 +1,4 @@
-From 6c154d4d240982c7bd80e3f44027734246e44700 Mon Sep 17 00:00:00 2001
+From b36062d0243982eb31322fd29903e32127fa12f0 Mon Sep 17 00:00:00 2001
 From: XiaoDong Huang <derrick.huang@rock-chips.com>
 Date: Sun, 25 Jun 2023 19:23:07 +0800
 Subject: [PATCH] feat(rockchip): add some pm helpers functions

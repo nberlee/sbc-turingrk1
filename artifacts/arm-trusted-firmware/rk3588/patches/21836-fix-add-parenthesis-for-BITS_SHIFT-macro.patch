@@ -1,4 +1,4 @@
-From 88007434088fc6c95caf74092f18a7310f39452c Mon Sep 17 00:00:00 2001
+From b25d16fdc1ed3733cef2462ab6271dc418fb3ac7 Mon Sep 17 00:00:00 2001
 From: XiaoDong Huang <derrick.huang@rock-chips.com>
 Date: Sun, 25 Jun 2023 16:20:08 +0800
 Subject: [PATCH] fix(rockchip): add parenthesis for BITS_SHIFT macro

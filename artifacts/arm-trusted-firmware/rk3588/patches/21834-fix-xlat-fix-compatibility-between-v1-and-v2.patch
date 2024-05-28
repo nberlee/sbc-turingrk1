@@ -1,4 +1,4 @@
-From 2c9b1857938c7d5b4599aa9d7ef05a99b6bd615a Mon Sep 17 00:00:00 2001
+From b68e6252ee945566861bd20821fd9581bef29f3e Mon Sep 17 00:00:00 2001
 From: XiaoDong Huang <derrick.huang@rock-chips.com>
 Date: Sun, 25 Jun 2023 15:55:42 +0800
 Subject: [PATCH] fix(rockchip): xlat: fix compatibility between v1 and v2

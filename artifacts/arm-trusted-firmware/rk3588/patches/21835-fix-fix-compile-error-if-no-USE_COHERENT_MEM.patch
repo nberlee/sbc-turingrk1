@@ -1,4 +1,4 @@
-From bb5a35d23842f44fdb526e9f1bec73d04357c795 Mon Sep 17 00:00:00 2001
+From 76e9fc443c510ccf3a2442b04913c1fc07bda122 Mon Sep 17 00:00:00 2001
 From: XiaoDong Huang <derrick.huang@rock-chips.com>
 Date: Sun, 25 Jun 2023 16:14:22 +0800
 Subject: [PATCH] fix(rockchip): fix compile error if no USE_COHERENT_MEM

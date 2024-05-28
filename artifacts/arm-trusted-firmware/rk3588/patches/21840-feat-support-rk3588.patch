@@ -1,4 +1,4 @@
-From fd91c4522395966250cec88625004c2ad5dff21e Mon Sep 17 00:00:00 2001
+From fe82234eb68954c643b2f6e49c92bb7d0536e04d Mon Sep 17 00:00:00 2001
 From: XiaoDong Huang <derrick.huang@rock-chips.com>
 Date: Mon, 26 Jun 2023 16:43:30 +0800
 Subject: [PATCH] feat(rk3588): support rk3588
@@ -17,7 +17,7 @@ Change-Id: I598109f15a2efd5b33aedd176cf708c08cb1dcf4
 ---
 
 diff --git a/docs/plat/rockchip.rst b/docs/plat/rockchip.rst
-index b7c43fb..e0bc1fd 100644
+index 01cf176..d3f3436 100644
 --- a/docs/plat/rockchip.rst
 +++ b/docs/plat/rockchip.rst
 @@ -10,6 +10,7 @@

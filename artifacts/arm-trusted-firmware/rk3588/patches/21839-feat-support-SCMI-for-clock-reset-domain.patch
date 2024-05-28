@@ -1,4 +1,4 @@
-From b1cf12a323d1537b0a78b0b659709cada683746b Mon Sep 17 00:00:00 2001
+From 0ff6d01f64c54e47e4e68357315f074c4e5ef644 Mon Sep 17 00:00:00 2001
 From: XiaoDong Huang <derrick.huang@rock-chips.com>
 Date: Sun, 25 Jun 2023 17:38:13 +0800
 Subject: [PATCH] feat(rockchip): support SCMI for clock/reset domain
