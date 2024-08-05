@@ -37,7 +37,6 @@ func (i *turingRK1Installer) GetOptions(extra turingRK1ExtraOptions) (overlay.Op
 		"console=ttyS2,115200",
 		"sysctl.kernel.kexec_load_disabled=1",
 		"talos.dashboard.disabled=1",
-                "numa=fake=8",
 	}
 
 	return overlay.Options{
