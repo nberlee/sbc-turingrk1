@@ -1,8 +1,8 @@
 module turingrk1
 
-go 1.22.7
+go 1.22.8
 
-toolchain go1.23.1
+toolchain go1.23.2
 
 require (
 	github.com/siderolabs/go-copy v0.1.0
