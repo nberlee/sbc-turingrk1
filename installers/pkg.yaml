@@ -5,7 +5,7 @@ dependencies:
   - stage: u-boot
     platform: linux/arm64
   - stage: profiles
-  - image: ghcr.io/nberlee/kernel:v1.8.2
+  - image: ghcr.io/nberlee/kernel:v1.8.3
     platform: linux/arm64
     from: /dtb/rockchip/rk3588-turing-rk1.dtb
     to: /rootfs/artifacts/arm64/dtb/rockchip/rk3588-turing-rk1.dtb
