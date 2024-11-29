@@ -22,20 +22,22 @@ steps:
         mkdir -p /usr/bin
         ln -sf /toolchain/bin/env /usr/bin/env
         ln -sf /toolchain/bin/python3 /toolchain/bin/python
+
         pip3 install pyelftools setuptools
 
         tar xf u-boot.tar.bz2 --strip-components=1
-        # not upstreamed yet
+
         for patch in $(find /pkg/patches -type f -name "*.patch" | sort); do
+          echo "Applying $patch"
           patch -p1 < $patch || (echo "Failed to apply patch $patch" && exit 1)
         done
+
         cp -f /pkg/rkbin/*.bin .
       - |
         make turing-rk1-rk3588_defconfig
     build:
       - |
-        export ROCKCHIP_TPL=$(pwd)/rk3588_ddr_lp4_2112MHz_lp5_2400MHz_v1.16_patched.bin
-        make -j $(nproc) HOSTLDLIBS_mkimage="-lssl -lcrypto" BL31=/libs/arm-trusted-firmware/rk3588/bl31.elf
+        make -j $(nproc) HOSTLDLIBS_mkimage="-lssl -lcrypto" BL31=/libs/arm-trusted-firmware/rk3588/bl31.elf ROCKCHIP_TPL=$(pwd)/rk3588_ddr_lp4_2112MHz_lp5_2400MHz_v1.18_patched.bin
     install:
       - |
         mkdir -p /rootfs/artifacts/arm64/u-boot/turingrk1

@@ -18,22 +18,10 @@ diff --git a/configs/turing-rk1-rk3588_defconfig b/configs/turing-rk1-rk3588_def
 index 289f2da..44c1155 100644
 --- a/configs/turing-rk1-rk3588_defconfig
 +++ b/configs/turing-rk1-rk3588_defconfig
-@@ -133,3 +133,6 @@ CONFIG_USB_GADGET_PRODUCT_NUM=0x350b
+@@ -108,3 +108,6 @@ 
  CONFIG_USB_GADGET_DOWNLOAD=y
  CONFIG_USB_FUNCTION_ROCKUSB=y
  CONFIG_ERRNO_STR=y
 +CONFIG_EFI_RNG_PROTOCOL=y
 +CONFIG_DM_RNG=y
 +CONFIG_RNG_ROCKCHIP=y
-diff --git a/arch/arm/dts/rk3588s-u-boot.dtsi b/arch/arm/dts/rk3588s-u-boot.dtsi
-index c0fd16c..50de26b 100644
---- a/arch/arm/dts/rk3588s-u-boot.dtsi
-+++ b/arch/arm/dts/rk3588s-u-boot.dtsi
-@@ -120,7 +120,6 @@
- 	rng: rng@fe378000 {
- 		compatible = "rockchip,trngv1";
- 		reg = <0x0 0xfe378000 0x0 0x200>;
--		status = "disabled";
- 	};
- 
- 	usbdp_phy0: phy@fed80000 {
